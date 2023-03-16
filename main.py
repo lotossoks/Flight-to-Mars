@@ -66,10 +66,6 @@ def change_next():
 
 # Check what my_input is correct
 def correct(ind):
-    # Empty string, check for 1 path
-    if 1 == len(vert_now["Next"]):
-        return ind == ""
-
     # Commands
     if ind in tech["Commands"]:
         if ind == "/инвентарь":
@@ -78,6 +74,11 @@ def correct(ind):
         if ind == "/состояние":
             print(tech["my_state"])
         return False
+    
+    # Empty string, check for 1 path
+    if 1 == len(vert_now["Next"]):
+        return ind == ""
+
     # !int
     if not (ind.isdigit()):  
         return False
@@ -174,6 +175,5 @@ while True:  # main cycle
 
     # Move to next vert
     vert_now = new_vert(ind) 
-
 # End?
 print("Конец?")
