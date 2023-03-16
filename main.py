@@ -1,161 +1,179 @@
 import json
 from random import randint
-"""with open('Project.json') as pro:
-    proj = json.load(pro)
-with open('Test.json') as test:
-    tech = json.load(test)["Tech"]
 
-    
-data = {"Tech": tech}
-data["Out"] = {}
-for k, v in proj.items():
-    print(k,v)
-    data["Out"][k] = {
-        "Text": v["Text"],
-        "Next": v["Go_to"],
-        "Show": v["To_show"],
-        "Flag": []
-    }
-
-with open('file.json', 'w') as file:
-    json.dump(data, file, ensure_ascii=False, indent=4)"""
-
-
-def output_text_vert():  # Вывод Text на экран
-    if "flag_change_text_mis_obj" in vert_now["Flag"]: #Вывод с заменой {хлам/оружие/провизия/...} на отсутствующие элементы из инвентаря
-       for i in tech["all_invent"].keys():
-            vert_now["Text"] = vert_now["Text"].replace(
-                "{" + i + "}",
-                list(filter(lambda x: x not in tech["my_invent"][i], tech["all_invent"][i]))[0].lower())
-           
-    if "flag_change_text_have_obj" in vert_now["Flag"]: #Вывод с заменой {хлам/оружие/провизия/...} на присутствующие элементы из инвентаря
-       for i in tech["all_invent"].keys():
-            vert_now["Text"] = vert_now["Text"].replace(
-                "{" + i + "}",
-                list(filter(lambda x: x in tech["my_invent"][i], tech["all_invent"][i]))[0])
-           
-    if "flag_input" in vert_now["Flag"]:  #Не вывод текста, а запрос
-        input("Введите вопрос:    ")
-        
-    else:
-        print(vert_now["Text"])  # Дефолт вывод
-
-
+# Helper function to determine the type of an object {Хлам/Оружие/Провизия/...}
 def type_obj(obj): # Определение какого типа объект (Хлам, оружие...)
     for k, v in tech["all_invent"].items():
         if obj in v:
             return k
     return False
 
-def output_show_vert():  # Вывод Show (куда идти дальше)
-    if "flag_choise" in vert_now["Flag"]:  #Вывод преобразованный Show (есть/нет)
-        for i in range(len(vert_now["Show"])):
-            if vert_now["use_items"][i] in tech["my_invent"][type_obj(vert_now["use_items"][i])]:
-                vert_now["Show"][i] = vert_now["Show"][i] + " (есть)"
-            else:
-                vert_now["Show"][i] = vert_now["Show"][i] + " (отсутствует)"
 
-    print(*vert_now["Show"], sep="    ")  # Дефолт вывод
+# Output text (story) of vertex
+def output_text_vert():
+    # Change text with replaced {Хлам/Оружие/Провизия/...} to missed object from inventory
+    if "flag_change_text_mis_obj_from_invent" in vert_now["Flag"]:
+        # Cycle of all types of items and check the item for belonging to this type
+        for i in tech["all_invent"].keys():     
+            # Selecting elements from "all_invent" if they are not in "my_invent"
+            vert_now["Text"] = vert_now["Text"].replace("{" + i + "}", list(filter(lambda x: x not in tech["my_invent"][i], tech["all_invent"][i]))[0].lower())
+
+    # Change text with replaced {Хлам/Оружие/Провизия/...} to available  object from inventory
+    if "flag_change_text_available_obj_from_invent" in vert_now["Flag"]:
+        # Cycle of all types of items and check the item for belonging to this type 
+        for i in tech["all_invent"].keys():
+            # Selecting elements from "all_invent" if they are in "my_invent"
+            vert_now["Text"] = vert_now["Text"].replace("{" + i + "}", list(filter(lambda x: x in tech["my_invent"][i], tech["all_invent"][i]))[0])
+
+    # Output text
+    if "flag_change_text_available_obj_from_invent"  not in vert_now["Flag"]:  #Не вывод текста, а запрос
+        print(vert_now["Text"])
+    # Output only input, without text
+    else:
+        input("Введите вопрос:    ")
 
 
-def change_next():  # Изменение списка направлений, связанных с флагами
-    if "flag_random_injury" in vert_now["Flag"]:
+# Output show (options for next steps)
+def output_show_vert():
+    # Does the person have these items and change the show with a postscript (yes / no)
+    if "flag_change_show_do_item_exist_in_my_invent" in vert_now["Flag"]: 
+        vert_now["Show"] = [vert_now["Show"][i] + " (есть)" if vert_now["use_items"][i] in tech["my_invent"][type_obj(vert_now["use_items"][i])] else vert_now["Show"][i] + " (отсутствует)" for i in range(len(vert_now["Show"]))]
+        
+    # Output show
+    print(*vert_now["Show"], sep="    ")
+
+    
+# Automatically jump (without showing the player that there is another option) to the vertex
+# Changing the list of destinations associated with flags is not displaye
+def change_next():
+    # Injury has a 50% chance of getting worse
+    if "flag_change_next_random_worse_injury" in vert_now["Flag"]:
         vert_now["Next"][randint(0, 1)]
-        
-    if "flag_choise_injury" in vert_now["Flag"] and "injury" in tech["all_need_state_flag_atc"]:  # Ранение в состояниях
-        vert_now["Next"] = list(filter(lambda z: "flag_use_injury" in vert_now[z]["Flag"], vert_now["Next"]))  # Та вершина в к-й есть флаг ранения flag_use_injury
-    
-    if "flag_choise_injury" in vert_now["Flag"] and "injury" not in tech["all_need_state_flag_atc"]:  # Ранение в состояниях
-        vert_now["Next"] = list(filter(lambda z: "flag_use_injury" not in data[z]["Flag"], vert_now["Next"]))  # Та вершина в к-й нет флаг ранения flag_use_injury
-    
-    if "flag_choise_mars" in vert_now["Flag"] and "toMars" in tech["all_need_state_flag_atc"]:  #  В зависимости от выбора в вершине выбора, полет на марс - да
-         vert_now["Next"] = list(filter(lambda z: "flag_consent_mars" in data[z]["Flag"], vert_now["Next"]))
-        
-    if "flag_choise_mars" in vert_now["Flag"] and "toMars" not in tech["all_need_state_flag_atc"]:  #  В зависимости от выбора в вершине выбора, полет на марс - нет
-         vert_now["Next"] = list(filter(lambda z: "flag_consent_mars" not in data[z]["Flag"], vert_now["Next"]))
 
+    # Jump to the vertex, where there "flag_use_injury"
+    if "flag_change_next_change_injury" in vert_now["Flag"]:
+        if "injury" in tech["all_need_state_flag_atc"]:
+            vert_now["Next"] = list(filter(lambda z: "flag_use_injury" in vert_now[z]["Flag"], vert_now["Next"]))
+        else:
+            vert_now["Next"] = list(filter(lambda z: "flag_use_injury" not in data[z]["Flag"], vert_now["Next"]))
 
-def my_input():  # Ввод направления
-    ind = input()  # Ввод числа
-    
-    while vert_now["Next"] != [] and not correct(ind):  # Фильтрация
-        if ind not in tech["Commands"]:
-            print("Такого варианта нет")
-        print(*vert_now["Show"],sep="    ")
-        ind = input()  #Повторный ввод
-    if vert_now["Next"] == []:
-        ind = -1
-    if ind == "":
-        ind = 1
-        
-    return ind # Дефолт вывод
+    # Jump to the vertex, where there "flag_change_next_letter_to_mars"
+    if "flag_change_next_letter_to_mars" in vert_now["Flag"]:
+        if "want_to_mars" in tech["all_need_state_flag_atc"]: 
+            vert_now["Next"] = list(filter(lambda z: "flag_consent_mars" in data[z]["Flag"], vert_now["Next"]))
+        else:
+            vert_now["Next"] = list(filter(lambda z: "flag_consent_mars" not in data[z]["Flag"], vert_now["Next"]))
 
-
-def correct(ind):  # Фильтрация my_input()
-    if 1 == len(vert_now["Next"]):  # Пустая строка, проверка на 1 путь
+# Check what my_input is correct
+def correct(ind):
+    # Empty string, check for 1 path
+    if 1 == len(vert_now["Next"]):
         return ind == ""
-        
-    if ind in tech["Commands"]:  #Команды
-        
+
+    # Commands
+    if ind in tech["Commands"]:
         if ind == "/инвентарь":
             print(tech["my_invent"])
             
         if ind == "/состояние":
             print(tech["my_state"])
-            
         return False
-    if not (ind.isdigit()):  # !Число, отбрасываем
+    # !int
+    if not (ind.isdigit()):  
         return False
         
-    if "flag_choise" in vert_now["Flag"]:  # Есть/Нет
+    # choice of direction with an available item
+    if "flag_change_show_do_item_exist_in_my_invent" in vert_now["Flag"]:  
         return "есть" in vert_now["Show"][int(ind) - 1]
-        
-    return int(ind) - 1 < len(vert_now["Show"])  #Дефолтный случай.
+
+    # Defolt
+    return int(ind) - 1 < len(vert_now["Show"])
+
     
-            
-def change_var(ind):  # Изменение разных переменных к-х мы не показываем.
-    if "flag_consent_mars_beg" in vert_now["Flag"]: # Первый выбор согласие/отказ, я соглаш
-        tech["all_need_state_flag_atc"].append("toMars")
+
+# Direction input
+def my_input():
+    ind = input() # First input
+    # Loop until selection is entered correctly
+    while vert_now["Next"] != [] and not correct(ind):
+        if ind not in tech["Commands"]:
+            print("Такого варианта нет")
+        print(*vert_now["Show"],sep="    ")
+        # Reentry
+        ind = input()
         
-    if "flag_add_inv" in vert_now["Flag"]:  # Добавление в инвентарь
+    # if vert_now["Next"] == [] --> End
+    if vert_now["Next"] == []:
+        ind = -1
+        
+    # if Empty string, choise first way
+    if ind == "":
+        ind = 1
+        
+    # Output
+    return ind
+
+
+# Changing variables that are not displayed
+def change_var(ind):
+
+    # Consent to fly to Mars
+    if "flag_change_var_want_to_mars" in vert_now["Flag"]:
+        tech["all_need_state_flag_atc"].append("want_to_mars")
+
+    # Append to my_invent
+    if "flag_add_inv" in vert_now["Flag"]:
         tech["my_invent"][type_obj(vert_now["add_obj"][ind - 1])].append(vert_now["add_obj"][ind - 1])
         tech["all_need_state_flag_atc"].append(vert_now["add_obj"][ind - 1])
-        
-    if "flag_del_inv" in vert_now["Flag"]:  # Удаление из  инвентаря
+
+    #Del from my_invent
+    if "flag_del_inv" in vert_now["Flag"]:
         tech["my_invent"][type_obj(vert_now["add_obj"][ind - 1])].remove(vert_now["add_obj"][ind - 1])
         tech["all_need_state_flag_atc"].remove(vert_now["del_obj"][ind - 1])
-        
-    if "flag_add_stat" in vert_now["Flag"]:  # Добавление в состояние
+
+    # Append to state
+    if "flag_add_stat" in vert_now["Flag"]:
         tech["my_state"].append(vert_now["add_state"][ind - 1])
         tech["all_need_state_flag_atc"].append(vert_now["add_state"][ind - 1])
-        
-    if "flag_del_stat" in vert_now["Flag"]:  # Удаление из состояния
+
+    # Del from state
+    if "flag_del_stat" in vert_now["Flag"]:
         tech["my_state"].remove(vert_now["del_state"][ind - 1])
         tech["all_need_state_flag_atc"].remove(vert_now["del_state"][ind - 1])
 
-def new_vert(ind):  # Переход на новую вершину
+
+# Move to next vert
+def new_vert(ind):
     return data[vert_now["Next"][int(ind) - 1]]
 
-
+# Open file
 with open('Project.json') as file:
-    tech = json.load(file)
-    tech, data = tech["Tech"], tech["Out"]
+    tech = json.load(file) # Tech - Technical information
+    tech, data = tech["Tech"], tech["Out"] 
 
-vert_now = data["0/Предыстория"]  #На какой вершине сейчас
+vert_now = data["0/Предыстория"]  # Vertex now
 
-while True:  #Основной цикл
-    output_text_vert()  # Вывод Text на экран
+while True:  # main cycle
     
-    output_show_vert()  # Вывод Show (куда идти дальше)
-    
-    change_next()  # Изменение списка направлений, связанных с флагами
-    
-    ind = int(my_input())  # Изменение разных переменных к-х мы не показываем.
-    if ind == -1:
+    # Output text (story) of vertex
+    output_text_vert()
+
+    # Output show (options for next steps)
+    output_show_vert()
+
+    # Changing the list of destinations associated with flags (not displayed)
+    change_next()
+
+    # Direction input
+    ind = int(my_input())
+    if ind == -1: # -->End
         break
-    
+
+    # Сhanging variables that are not displayed
     change_var(ind)
-    
-    vert_now = new_vert(ind)  # Переход на новую вершину
-        
+
+    # Move to next vert
+    vert_now = new_vert(ind) 
+
+# End?
 print("Конец?")
