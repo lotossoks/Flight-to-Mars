@@ -147,33 +147,43 @@ def change_var(ind):
 def new_vert(ind):
     return data[vert_now["Next"][int(ind) - 1]]
 
-# Open file
-with open('Project.json') as file:
-    tech = json.load(file) # Tech - Technical information
-    tech, data = tech["Tech"], tech["Out"] 
-
-vert_now = data["0/Предыстория"]  # Vertex now
-
-while True:  # main cycle
+# main cycle
+while True: 
+    # Open file 
+    with open('Project.json') as file:
+        tech = json.load(file) # Tech - Technical information
+        tech, data = tech["Tech"], tech["Out"] 
     
-    # Output text (story) of vertex
-    output_text_vert()
-
-    # Output show (options for next steps)
-    output_show_vert()
-
-    # Changing the list of destinations associated with flags (not displayed)
-    change_next()
-
-    # Direction input
-    ind = int(my_input())
-    if ind == -1: # -->End
+    vert_now = data["0/Предыстория"]  # Vertex now
+    
+    while True:  # cycle of one iteration
+        
+        # Output text (story) of vertex
+        output_text_vert()
+    
+        # Output show (options for next steps)
+        output_show_vert()
+    
+        # Changing the list of destinations associated with flags (not displayed)
+        change_next()
+    
+        # Direction input
+        ind = int(my_input())
+        if ind == -1: # -->End
+            break
+    
+        # Сhanging variables that are not displayed
+        change_var(ind)
+    
+        # Move to next vert
+        vert_now = new_vert(ind) 
+    # End?
+    print("Конец?")
+    x = input("Хотите сыграть еще раз?\n1. Да    2. Нет\n")
+    while x != "1" and x != "2":
+        print("Такого варинта нет")
+        x = input("Хотите сыграть еще раз?\n1. Да    2. Нет\n")
+    if x == "2":
         break
 
-    # Сhanging variables that are not displayed
-    change_var(ind)
-
-    # Move to next vert
-    vert_now = new_vert(ind) 
-# End?
-print("Конец?")
+print("Спасибо за игру!")
