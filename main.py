@@ -217,5 +217,6 @@ while True:
     print("Хотите сыграть еще раз?")
     if easy_corr_check() == "2":
         break
-
+        
+os.remove("Saving.json")
 print("Спасибо за игру!")
