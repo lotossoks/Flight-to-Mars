@@ -1,5 +1,7 @@
 import json
 from random import randint
+import os.path
+
 
 # Helper function to determine the type of an object {Хлам/Оружие/Провизия/...}
 def type_obj(obj): # Определение какого типа объект (Хлам, оружие...)
@@ -26,7 +28,7 @@ def output_text_vert():
             vert_now["Text"] = vert_now["Text"].replace("{" + i + "}", list(filter(lambda x: x in tech["my_invent"][i], tech["all_invent"][i]))[0])
 
     # Output text
-    if "flag_change_text_available_obj_from_invent"  not in vert_now["Flag"]:  #Не вывод текста, а запрос
+    if "flag_change_text_only_input"  not in vert_now["Flag"]:  #Не вывод текста, а запрос
         print(vert_now["Text"])
     # Output only input, without text
     else:
@@ -64,6 +66,7 @@ def change_next():
         else:
             vert_now["Next"] = list(filter(lambda z: "flag_consent_mars" not in data[z]["Flag"], vert_now["Next"]))
 
+            
 # Check what my_input is correct
 def correct(ind):
     # Commands
@@ -145,18 +148,47 @@ def change_var(ind):
 
 # Move to next vert
 def new_vert(ind):
-    return data[vert_now["Next"][int(ind) - 1]]
+    with open('Saving.json', 'w') as file:
+        json.dump(tech, file, ensure_ascii=False, indent=4)
+    tech["vert_now"] = vert_now["Next"][int(ind) - 1]
+    return data[tech["vert_now"]]
+
+
+# Helper func, check what input wos 1 or 2
+def easy_corr_check():
+    x = input("1. Да    2. Нет\n")
+    while x != "1" and x != "2":
+        print("Такого варинта нет")
+        x = input("1. Да    2. Нет\n")
+    return x
+
 
 # main cycle
 while True: 
+    
     # Open file 
     with open('Project.json') as file:
         tech = json.load(file) # Tech - Technical information
         tech, data = tech["Tech"], tech["Out"] 
     
-    vert_now = data["0/Предыстория"]  # Vertex now
+    vert_now = data[tech["vert_now"]]  # Vertex now
     
-    while True:  # cycle of one iteration
+    # Do u have saving?
+    if os.path.exists("Saving.json"):
+        print("Хотите ли вы продолжить с последнего сохранения?")
+        
+        if easy_corr_check() == "1":
+            with open('Saving.json') as Saving:
+                Saving = json.load(Saving)
+                vert_now = data[Saving["vert_now"]]
+                tech = Saving
+                
+        else:
+            os.remove("Saving.json")
+        
+        
+    # cycle of one iteration    
+    while True: 
         
         # Output text (story) of vertex
         output_text_vert()
@@ -174,16 +206,16 @@ while True:
     
         # Сhanging variables that are not displayed
         change_var(ind)
-    
+        
         # Move to next vert
         vert_now = new_vert(ind) 
+        
     # End?
     print("Конец?")
-    x = input("Хотите сыграть еще раз?\n1. Да    2. Нет\n")
-    while x != "1" and x != "2":
-        print("Такого варинта нет")
-        x = input("Хотите сыграть еще раз?\n1. Да    2. Нет\n")
-    if x == "2":
+    
+    # Do u want play again
+    print("Хотите сыграть еще раз?")
+    if easy_corr_check() == "2":
         break
 
 print("Спасибо за игру!")
